@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pipeline Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4">
+                    <h3 class="card-title text-primary mb-3">Environmental Data Ingestion</h3>
+                    <p class="text-muted small">Upload a raw CSV file to dispatch a background cleaning task over the Redis highway.</p>
+                    
+                    <hr>
+
+                    <form id="uploadForm">
+                        <div class="mb-3">
+                            <label for="csvFile" class="form-label fw-bold">Select Environmental CSV</label>
+                            <input class="form-control" type="file" id="csvFile" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Dispatch to Celery Worker</button>
+                    </form>
+
+                    <div id="responseBox" class="mt-4 d-none">
+                        <div class="alert alert-success">
+                            <h5 class="alert-heading">🚀 Task Dispatched Successfully!</h5>
+                            <pre id="jsonResult" class="bg-dark text-light p-3 rounded small mt-2"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('csvFile');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/v1/pipeline/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                // Display the response JSON containing the Celery task UUID
+                document.getElementById('jsonResult').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('responseBox').classList.remove('d-none');
+            } catch (error) {
+                alert('Pipeline upload failed.');
+            }
+        });
+    </script>
+</body>
+</html>
